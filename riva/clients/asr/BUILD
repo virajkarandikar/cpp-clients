@@ -51,6 +51,7 @@ cc_library(
             "streaming_recognize_client.cc"
     ],
     deps = [
+        "//riva/clients/utils:grpc",
         ":asr_client_helper",
         ":client_call",
         "//riva/utils/wav:reader",
@@ -96,11 +97,9 @@ cc_binary(
         ":asr_client_helper",
         ":client_call",
         ":streaming_recognize_client",
-        "@nvriva_common//riva/proto:riva_grpc_asr",
         "//riva/utils/files:files",
         "//riva/utils/wav:reader",
         "@glog//:glog",
-        "//riva/clients/utils:grpc",
     ] + select({
         "@platforms//cpu:aarch64": [
             "@alsa_aarch64//:libasound"

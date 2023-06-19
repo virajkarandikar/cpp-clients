@@ -25,7 +25,6 @@
 #include <thread>
 
 #include "client_call.h"
-#include "riva/clients/utils/grpc.h"
 #include "riva/proto/riva_asr.grpc.pb.h"
 #include "riva/utils/files/files.h"
 #include "riva/utils/stamping.h"
@@ -143,9 +142,9 @@ main(int argc, char** argv)
     FLAGS_riva_uri = riva_uri;
   }
 
-  std::shared_ptr<grpc::Channel> grpc_channel;
+  // std::shared_ptr<grpc::Channel> grpc_channel;
+  std::shared_ptr<grpc::ChannelCredentials> creds;
   try {
-    std::shared_ptr<grpc::ChannelCredentials> creds;
     if (FLAGS_ssl_cert.size() > 0 || FLAGS_use_ssl) {
       LOG(INFO) << "Using Secure Server Credentials";
       grpc::SslCredentialsOptions ssl_opts;
@@ -160,7 +159,7 @@ main(int argc, char** argv)
       creds = grpc::InsecureChannelCredentials();
     }
 
-    grpc_channel = riva::clients::CreateChannelBlocking(FLAGS_riva_uri, creds);
+    // grpc_channel = riva::clients::CreateChannelBlocking(FLAGS_riva_uri, creds);
   }
   catch (const std::exception& e) {
     std::cerr << "Error creating GRPC channel: " << e.what() << std::endl;
@@ -169,7 +168,7 @@ main(int argc, char** argv)
   }
 
   StreamingRecognizeClient recognize_client(
-      grpc_channel, FLAGS_num_parallel_requests, FLAGS_language_code, FLAGS_max_alternatives,
+      FLAGS_riva_uri, creds, FLAGS_num_parallel_requests, FLAGS_language_code, FLAGS_max_alternatives,
       FLAGS_profanity_filter, FLAGS_word_time_offsets, FLAGS_automatic_punctuation,
       /* separate_recognition_per_channel*/ false, FLAGS_print_transcripts, FLAGS_chunk_duration_ms,
       FLAGS_interim_results, FLAGS_output_filename, FLAGS_model_name, FLAGS_simulate_realtime,

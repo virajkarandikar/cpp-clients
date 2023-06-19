@@ -15,11 +15,10 @@ namespace nr_asr = nvidia::riva::asr;
 
 TEST(StreamingRecognizeClient, num_responses_requests)
 {
-  auto grpc_channel = grpc::CreateChannel("localhost:1", grpc::InsecureChannelCredentials());
   auto current_time = std::chrono::steady_clock::now();
 
   StreamingRecognizeClient recognize_client(
-      grpc_channel, 1, "en-US", 1, false, false, false, false, false, 800, false, "dummy.txt",
+      "localhost:1", nullptr, 1, "en-US", 1, false, false, false, false, false, 800, false, "dummy.txt",
       "dummy", true, true, "", 10.);
 
   std::shared_ptr<ClientCall> call = std::make_shared<ClientCall>(1, true);

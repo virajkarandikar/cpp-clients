@@ -6,6 +6,7 @@
 
 #include "streaming_recognize_client.h"
 
+#include "riva/clients/utils/grpc.h"
 #include "riva/utils/opus/opus_client_decoder.h"
 
 #define clear_screen() printf("\033[H\033[J")
@@ -52,13 +53,13 @@ MicrophoneThreadMain(
 }
 
 StreamingRecognizeClient::StreamingRecognizeClient(
-    std::shared_ptr<grpc::Channel> channel, int32_t num_parallel_requests,
+    const std::string& riva_uri, std::shared_ptr<grpc::ChannelCredentials> creds, int32_t num_parallel_requests,
     const std::string& language_code, int32_t max_alternatives, bool profanity_filter,
     bool word_time_offsets, bool automatic_punctuation, bool separate_recognition_per_channel,
     bool print_transcripts, int32_t chunk_duration_ms, bool interim_results,
     std::string output_filename, std::string model_name, bool simulate_realtime,
     bool verbatim_transcripts, const std::string& boosted_phrases_file, float boosted_phrases_score)
-    : print_latency_stats_(true), stub_(nr_asr::RivaSpeechRecognition::NewStub(channel)),
+    : print_latency_stats_(true), riva_uri_(riva_uri), creds_(creds),
       language_code_(language_code), max_alternatives_(max_alternatives),
       profanity_filter_(profanity_filter), word_time_offsets_(word_time_offsets),
       automatic_punctuation_(automatic_punctuation),
@@ -91,7 +92,10 @@ StreamingRecognizeClient::StartNewStream(std::unique_ptr<Stream> stream)
 {
   std::shared_ptr<ClientCall> call =
       std::make_shared<ClientCall>(stream->corr_id, word_time_offsets_);
-  call->streamer = stub_->StreamingRecognize(&call->context);
+
+  std::shared_ptr<grpc::Channel> grpc_channel = riva::clients::CreateChannelBlocking(riva_uri_, creds_);
+  std::unique_ptr<nr_asr::RivaSpeechRecognition::Stub> stub = nr_asr::RivaSpeechRecognition::NewStub(grpc_channel);
+  call->streamer = stub->StreamingRecognize(&call->context);
   call->stream = std::move(stream);
 
   num_active_streams_++;
@@ -365,7 +369,9 @@ StreamingRecognizeClient::DoStreamingFromMicrophone(
   std::cout << "Using device:" << audio_device << std::endl;
 
   std::shared_ptr<ClientCall> call = std::make_shared<ClientCall>(1, word_time_offsets_);
-  call->streamer = stub_->StreamingRecognize(&call->context);
+  std::shared_ptr<grpc::Channel> grpc_channel = riva::clients::CreateChannelBlocking(riva_uri_, creds_);
+  std::unique_ptr<nr_asr::RivaSpeechRecognition::Stub> stub = nr_asr::RivaSpeechRecognition::NewStub(grpc_channel);
+  call->streamer = stub->StreamingRecognize(&call->context);
 
   // Send first request
   nr_asr::StreamingRecognizeRequest request;

@@ -41,7 +41,7 @@ namespace nr_asr = nvidia::riva::asr;
 class StreamingRecognizeClient {
  public:
   StreamingRecognizeClient(
-      std::shared_ptr<grpc::Channel> channel, int32_t num_parallel_requests,
+      const std::string& riva_uri, std::shared_ptr<grpc::ChannelCredentials> creds, int32_t num_parallel_requests,
       const std::string& language_code, int32_t max_alternatives, bool profanity_filter,
       bool word_time_offsets, bool automatic_punctuation, bool separate_recognition_per_channel,
       bool print_transcripts, int32_t chunk_duration_ms, bool interim_results,
@@ -81,7 +81,9 @@ class StreamingRecognizeClient {
  private:
   // Out of the passed in Channel comes the stub, stored here, our view of the
   // server's exposed services.
-  std::unique_ptr<nr_asr::RivaSpeechRecognition::Stub> stub_;
+//   std::unique_ptr<nr_asr::RivaSpeechRecognition::Stub> stub_;
+  std::string riva_uri_;
+  std::shared_ptr<grpc::ChannelCredentials> creds_;
   std::vector<double> int_latencies_, final_latencies_, latencies_;
 
   std::string language_code_;
